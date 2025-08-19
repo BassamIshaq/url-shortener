@@ -1,0 +1,12 @@
+{
+  "name": "shortener",
+  "version": "1.0.0",
+  "main": "app.js",
+  "dependencies": {
+    "express": "4.18.2",
+    "mongoose": "7.6.0",
+    "nanoid": "3.3.7",
+    "valid-url": "1.0.9",
+    "cors": "2.8.5"
+  }
+}

@@ -1,0 +1,100 @@
+version: '3.8'
+
+services:
+  mongodb:
+    image: mongo:6
+    container_name: url-shortener-mongo
+    restart: unless-stopped
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb_data:/data/db
+    environment:
+      MONGO_INITDB_DATABASE: urlshortener
+    networks:
+      - url-shortener-network
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  shortener:
+    build: 
+      context: ./services/shortener
+      dockerfile: Dockerfile
+    container_name: url-shortener-shortener
+    restart: unless-stopped
+    ports:
+      - "3001:3001"
+    environment:
+      - MONGO_URI=mongodb://mongodb:27017/urlshortener
+      - BASE_URL=http://localhost:3002
+      - PORT=3001
+      - NODE_ENV=production
+    depends_on:
+      mongodb:
+        condition: service_healthy
+    networks:
+      - url-shortener-network
+
+  redirect:
+    build: 
+      context: ./services/redirect
+      dockerfile: Dockerfile
+    container_name: url-shortener-redirect
+    restart: unless-stopped
+    ports:
+      - "3002:3002"
+    environment:
+      - MONGO_URI=mongodb://mongodb:27017/urlshortener
+      - ANALYTICS_SERVICE_URL=http://analytics:3003
+      - PORT=3002
+      - NODE_ENV=production
+    depends_on:
+      mongodb:
+        condition: service_healthy
+    networks:
+      - url-shortener-network
+
+  analytics:
+    build: 
+      context: ./services/analytics
+      dockerfile: Dockerfile
+    container_name: url-shortener-analytics
+    restart: unless-stopped
+    ports:
+      - "3003:3003"
+    environment:
+      - MONGO_URI=mongodb://mongodb:27017/urlshortener
+      - PORT=3003
+      - NODE_ENV=production
+    depends_on:
+      mongodb:
+        condition: service_healthy
+    networks:
+      - url-shortener-network
+
+  frontend:
+    build: 
+      context: ./services/frontend
+      dockerfile: Dockerfile
+    container_name: url-shortener-frontend
+    restart: unless-stopped
+    ports:
+      - "3000:80"
+    environment:
+      - REACT_APP_API_BASE=http://localhost:3001
+      - REACT_APP_REDIRECT_BASE=http://localhost:3002
+    depends_on:
+      - shortener
+    networks:
+      - url-shortener-network
+
+volumes:
+  mongodb_data:
+
+networks:
+  url-shortener-network:
+    driver: bridge
