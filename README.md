@@ -7,22 +7,26 @@ A simple, production-ready URL shortener built as microservices and deployed on 
 ## 🚀 Quick Start
 
 1. **Clone & Enter Project**
+    ```sh
     git clone https://github.com/BassamIshaq/url-shortener.git
     cd url-shortener
+    ```
 
 2. **Build Docker Images**
+    ```sh
     docker build -t shortener:latest ./services/shortener
     docker build -t redirect:latest ./services/redirect
     docker build -t analytics:latest ./services/analytics
     docker build -t frontend:latest ./frontend
-
+    ```
 
 3. **Deploy to Kubernetes**
+    ```sh
     kubectl create namespace url-shortener
     kubectl apply -f k8s/ -n url-shortener
     kubectl get pods -n url-shortener
     kubectl get services -n url-shortener
-
+    ```
 
 ---
 
